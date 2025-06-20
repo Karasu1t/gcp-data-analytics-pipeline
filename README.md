@@ -1,52 +1,94 @@
-## 概要
+# 📊 GCP Data Analytics Pipeline
 
-Google Storage に分析用のデータを格納し、左記のデータを加工後  
-BigQuery 上に取り込み分析できる様にする。  
-データをそのまま BigQuery に取り込みデータマートを用意するパターンと  
-データの加工を BigQuery へのデータ取り込み前に実施するパターンをそれぞれ検証する
+## 📌 概要
 
-## 目的
+本プロジェクトは、Google Cloud 上における**自動化されたデータ分析パイプライン**の構築を目的としています。  
+Cloud Storage 上のCSVファイルを起点に、Cloud Composer によるスケジュール制御、Dataflow によるETL処理、  
+BigQuery によるデータマート生成、Workflows によるSlack通知を連携させたフローを構成しています。
 
-- BigQuery の操作を出来るようにする
-- データレイク(Cloud Storage) → DWH(BigQuery) → データマートの一連の構成を GoogleCloud 環境上で構築できるようになる
-- ETL を GoogleCloud 上で実施する場合の方法を手を動かして身に着ける
-
-## アーキテクチャ図
-
-![アーキテクチャ図](picture/arch.png)
-
-## 前提条件
-
-- GitHub 上に以下のリポジトリを作成しておく：
-- [storage-bq-etl-pipeline](https://github.com/Karasu1t/storage-bq-etl-pipeline)
-- GoogleCloud アカウントを作成し、予め必要な API の有効化および terraform のための ServiceAccount を作成している
-- 本学習を進めるにあたり以下のバージョンで実施しています。
-
-1.  OS Ubuntu(WSL) 5.15.167.4-microsoft-standard-WSL2
-2.  Terraform v1.12.1
-3.  Google Cloud SDK 522.0.0
-4.  bq 2.1.16
-
-## フェーズ構成
-
-本環境構築は以下のフェーズに分けて進める：
-
-1. **Cloud Storage と BigQuery Dataset をデプロイし Cloud Storage に格納した csv を元にテーブルを作成できること**
-2. **テーブル上のデータを元にモデル作成が出来ること**
-3. **Null データを含むテーブルを SQL にて加工したデータマートを作成しモデル作成が出来ること**
-4. **Null データを含むデータを ETL 処理後にテーブルを作成し、モデル作成が出来ること**
+> データ分析の一連の流れをGCP上で完結できる構成を学習・再現できるようにすることを目的としています。
 
 ---
 
-各フェーズの詳細手順や設定内容については、以降のセクションに記載。
+## 🎯 この構成で実現できること
 
-[Phase 1 - BigQuery の Dataset 上でテーブルを作成する](https://github.com/Karasu1t/storage-bq-etl-pipeline/blob/main/Phase1.md)  
-[Phase 2 - テーブル上のデータを元にモデル作成](https://github.com/Karasu1t/storage-bq-etl-pipeline/blob/main/Phase2.md)  
-[Phase 3 - Null データを含むテーブルを SQL にて加工したデータマートを作成しモデル作成](https://github.com/Karasu1t/storage-bq-etl-pipeline/blob/main/Phase3.md)  
-[Phase 4 - Null データを含むデータを ETL 処理後にテーブルを作成しモデル作成](https://github.com/Karasu1t/storage-bq-etl-pipeline/blob/main/Phase4.md)
+- GCP上でデータ分析基盤（ETL〜集計〜通知）を構築
+- ComposerやDataflowなどのマネージドサービス連携を体得
+- BigQuery上に自動的に構築されたデータマートをもとに、Slack通知などの運用連携が可能
 
-## 注意事項
+---
 
-- ServiceAccount の権限については事前定義ロールを使用
-- dev フォルダ配下に locals.tf が本来あるがプロジェクト ID の記載があるため、セキュリティの兼ね合いで git 上に掲載せず
-- ServiceAccount の key についても同様
+## 🗺 アーキテクチャ図
+
+![アーキテクチャ図](picture/arch.png)
+
+---
+
+## ✅ 処理の流れ
+
+1. Cloud Storage にCSVファイルが格納されている状態を前提とします
+2. Cloud Composer の DAG により毎朝 9:00 にパイプラインが起動
+3. Dataflow が起動し、Cloud Storage 上のCSVを加工して BigQuery に格納
+4. BigQuery 上でマート用のクエリが自動実行され、集計テーブルが作成される
+5. Workflows により、レポート生成完了後に Slack 通知が送信され、必要に応じてDLリンクも共有される
+
+---
+
+## 🖥 使用環境
+
+| 項目 | 内容 |
+|------|------|
+| OS | Ubuntu（WSL2）5.15.167.4 |
+| Terraform | v1.12.1（任意） |
+| Google Cloud SDK | 522.0.0 |
+| bq CLI | 2.1.16 |
+| Python | 3.10以上（DAG/Dataflowスクリプト） |
+
+---
+
+## 📁 フェーズ構成（説明順）
+
+| フェーズ | 説明 |
+|---------|------|
+| Phase 1 | Cloud Storage・BigQuery・Composer・Slack Webhook の準備 |
+| Phase 2 | Cloud Composer による定期スケジューリング設定 |
+| Phase 3 | Dataflow によるCSVのETL処理 → BigQuery書き込み |
+| Phase 4 | BigQuery 上でのマート生成クエリ実行 |
+| Phase 5 | Workflows によるSlack通知とレポートDLリンクの送信 |
+
+---
+
+## 📌 成果物の例
+
+- Slack通知のスクリーンショット（Workflows経由）
+- BigQuery 上に生成されたマートテーブル
+- Composer DAG UI 上でのジョブ可視化
+- （任意）Cloud Storage へ出力されたレポートCSVファイル
+
+---
+
+## 🛠 使用技術スタック
+
+- **Cloud Composer**（Airflowベースのスケジューラ）
+- **Dataflow**（Apache BeamベースのETL処理基盤）
+- **BigQuery**（DWH & SQL分析）
+- **Workflows**（マネージドワークフロー管理）
+- **Slack Webhook**（通知連携）
+
+---
+
+## ⚠️ 注意事項
+
+- `dev/locals.tf` 等に記載されるプロジェクトIDなどの機密情報は `.gitignore` に追加してください
+- ServiceAccountのkeyファイルは公開せず、Secret Manager 等で管理してください
+- Slack WebhookのURLは外部に漏れないように環境変数またはSecret Manager経由で参照してください
+
+---
+
+## 📌 備考
+
+この構成は、マーケティングやデータ分析基盤構築の実務において頻出の構成です。  
+業務自動化・レポーティング・通知までを含む一連のパイプラインの理解・実践に役立ちます。
+
+---
+
