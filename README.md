@@ -1,4 +1,4 @@
-# 📊 GCP Data Analytics Pipeline
+# 📊 データ分析プロジェクト：労働・給与と出国者数の傾向分析
 
 ## 📌 概要
 
@@ -8,13 +8,25 @@ BigQuery によるデータマート生成、Workflows による Slack 通知を
 
 > データ分析の一連の流れを GCP 上で完結できる構成を学習・再現できるようにすることを目的としています。
 
-取り扱うデータとして、e-Stat(https://www.e-stat.go.jp/)から以下の取得データを元に、  
-労働者人口(正規・非正規)と給与、出国者数を分析し、レポートとして生成されるまでを想定しています。
+## 🔍 分析目的
 
-- 出国者数（総数）[https://dashboard.e-stat.go.jp/timeSeriesResult?indicatorCode=0204040001000010010]
-- 正規の職員・従業員（男女計）[https://dashboard.e-stat.go.jp/timeSeriesResult?indicatorCode=0303010000000010010]
-- 非正規の職員・従業員（男女計）[https://dashboard.e-stat.go.jp/timeSeriesResult?indicatorCode=0303020000000010010]
-- 現金給与総額 [https://dashboard.e-stat.go.jp/timeSeriesResult?indicatorCode=0302020000000010000]
+労働者人口（正規・非正規）と現金給与、出国者数の関係性を可視化・分析し、社会動向を把握することを目的とします。
+
+## 📥 使用データ（政府統計の総合窓口 e-Stat より取得）
+
+以下の統計データを活用します：
+
+- **出国者数（総数）**  
+  https://dashboard.e-stat.go.jp/timeSeriesResult?indicatorCode=0204040001000010010
+
+- **正規の職員・従業員（男女計）**  
+  https://dashboard.e-stat.go.jp/timeSeriesResult?indicatorCode=0303010000000010010
+
+- **非正規の職員・従業員（男女計）**  
+  https://dashboard.e-stat.go.jp/timeSeriesResult?indicatorCode=0303020000000010010
+
+- **現金給与総額**  
+  https://dashboard.e-stat.go.jp/timeSeriesResult?indicatorCode=0302020000000010000
 
 ---
 
