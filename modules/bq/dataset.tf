@@ -1,5 +1,5 @@
-resource "google_bigquery_dataset" "dataset" {
-  dataset_id                  = "iris_dataset"
+resource "google_bigquery_dataset" "analytics_dataset" {
+  dataset_id                  = "analytics_dataset"
   friendly_name               = "test"
   location                    = "ASIA-NORTHEAST1"
   default_table_expiration_ms = 3600000

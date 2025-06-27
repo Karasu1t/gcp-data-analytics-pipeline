@@ -40,7 +40,7 @@ BigQuery によるデータマート生成、Workflows による Slack 通知を
 
 ## 🗺 アーキテクチャ図
 
-![アーキテクチャ図](picture/arch.png)
+![アーキテクチャ図](img/arch.png)
 
 ---
 
@@ -94,14 +94,131 @@ BigQuery によるデータマート生成、Workflows による Slack 通知を
 - **BigQuery**（DWH & SQL 分析）
 - **Workflows**（マネージドワークフロー管理）
 - **Slack Webhook**（通知連携）
+- **Looker Studio**（ダッシュボードの可視化）
 
 ---
+
+## 💼 実務応用ポイント
+
+- 複数データソースからの統合およびスキーマ変換を Apache Beam により自動化
+- DAG の分割・依存関係定義により、段階的に処理・通知が可能な構成に設計
+- Slack 通知と Looker Studio ダッシュボード連携により、非エンジニア層への共有も想定
+- Terraform により GCP リソース全体をコードで管理、再現性のあるインフラ構築を実現
+
+---
+
+## 🧭 想定ユースケース
+
+- 定期的な政府統計データの収集・集計・共有
+- 社内向けマーケティングレポートや月次報告用の自動化基盤構築
+- データパイプライン全体の統合管理と通知による業務効率化
+
+---
+
+## 📁 ディレクトリ構成
+
+<pre><code>
+.
+├── README.md
+├── envs
+│   └── dev
+│       ├── backend.tf
+│       ├── locals.tf (gitigore)
+│       ├── main.tf
+│       ├── outputs.tf
+│       └── provider.tf
+├── data
+│   ├── nonregularemployee.zip
+│   ├── passengers.zip
+│   ├── regularemployee.zip
+│   └── salary.zip
+├── img
+│   └── arch.png
+├── modules
+│   ├── artifactregistry
+│   │   ├── outputs.tf
+│   │   ├── registry.tf
+│   │   └── variables.tf
+│   ├── bq
+│   │   ├── dataset.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   ├── composer
+│   │   ├── etl.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   └── storage
+│       ├── outputs.tf
+│       ├── storage.tf
+│       └── variables.tf
+└── src
+    ├── composer
+    │   └── etl_dataflow_pipeline.py
+    └── dataflow
+        ├── Dockerfile
+        ├── etl.py
+        ├── metadata.json
+        └── requirements.txt
+</code></pre>
+
+---
+
+## 🚀 環境構築と実行手順
+
+### 前提
+
+- GCP プロジェクトが作成済であること
+- Cloud Composer, Dataflow API などが有効化されていること
+
+### 手順概要
+
+# ① Terraform によるリソース構築
+
+<pre><code>
+cd modeules/envs/dev
+terraform init
+terraform apply
+</code></pre>
+
+# ② Artifical Registry への Image アップロード
+
+<pre><code>
+gcloud auth configure-docker asia-northeast1-docker.pkg.dev
+docker build -t asia-northeast1-docker.pkg.dev/[プロジェクト ID]/dev-karasuit-create-template/etl-image:v1 .
+docker push asia-northeast1-docker.pkg.dev/[プロジェクト ID]/dev-karasuit-create-template/etl-image:v1
+</code></pre>
+
+# ③ Dataflow 用の Template をビルド
+
+<pre><code>
+gcloud dataflow flex-template build gs://dev-karasuit-dataflow/templates/etl_template.json \
+ --image "asia-northeast1-docker.pkg.dev/[プロジェクト ID]/dev-karasuit-create-template/etl-image:v1" \
+ --sdk-language "PYTHON" \
+ --metadata-file "metadata.json"
+</code></pre>
+
+# ④ DAG ファイルアップロード
+
+<pre><code>
+gsutil cp etl_and_datamart_pipeline.py gs://<composer-bucket>/dags/
+</code></pre>
+
+# ⑤ AirFlow から DAG を手動実行(本来であれば AM09:00 に自動起動)
+
+![AirFlowUI図](img/Airflow.png)
+
+# ⑥ Slack よりレポートの URL を連携
+
+![Slack通知図](img/Slack.png)
+
+![レポート内容画面](img/Report.png)
 
 ## ⚠️ 注意事項
 
 - `dev/locals.tf` 等に記載されるプロジェクト ID などの機密情報は `.gitignore` に追加してください
 - ServiceAccount の key ファイルは公開せず、Secret Manager 等で管理してください
 - Slack Webhook の URL は外部に漏れないように環境変数または Secret Manager 経由で参照してください
+- Looker Studio の テンプレートは予め作成しておいてください
 
 ---
 

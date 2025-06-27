@@ -1,0 +1,20 @@
+{
+  "name": "etl-flex-template",
+  "description": "Dataflow Flex Template for ETL job",
+  "parameters": [
+    {
+      "name": "inputFile",
+      "label": "Input GCS file path",
+      "helpText": "GCS path to input data",
+      "paramType": "TEXT",
+      "isOptional": true
+    },
+    {
+      "name": "outputTable",
+      "label": "Output BigQuery Table",
+      "helpText": "BigQuery table name",
+      "paramType": "TEXT",
+      "isOptional": true
+    }
+  ]
+}
