@@ -132,8 +132,6 @@ BigQuery によるデータマート生成、Workflows による Slack 通知を
 │   ├── passengers.zip
 │   ├── regularemployee.zip
 │   └── salary.zip
-├── img
-│   └── arch.png
 ├── modules
 │   ├── artifactregistry
 │   │   ├── outputs.tf
